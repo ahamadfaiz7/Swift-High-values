@@ -2,6 +2,25 @@ image: docker:20.10.14
 services:
   - docker:20.10.14-dind
 
+variables:
+  GIT_STRATEGY: clone
+  # Make sure that you get tags from git repository otherwise the release
+  # Gradle plugin will not be able to create the next version number: 
+  GIT_FETCH_EXTRA_FLAGS: --tags 
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.java.home=/opt/openjdk-17"
+  APP_VERSION: $CI_PIPELINE_IID
+  TAG_DEV: registry.flexpay.co.za:5000/flexpay-auth-dev
+  TAG_PREPROD: registry.flexpay.co.za:5000/flexpay-auth-preprod
+  TAG_PROD: registry.flexpay.co.za:5000/flexpay-auth-prod
+  TAG_LATEST: registry.flexpay.co.za:5000/flexpay-auth:latest
+  TAG_COMMIT: registry.flexpay.co.za:5000/flexpay-auth/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA
+
+before_script:
+  - echo `pwd` # debug
+  - echo "$CI_COMMIT_REF_SLUG, $CI_MERGE_REQUEST_TARGET_BRANCH_NAME, $CI_MERGE_REQUEST_TARGET_BRANCH_NAME, $CI_COMMIT_BRANCH, $CI_BUILD_NAME, $CI_BUILD_REF_NAME, $CI_COMMIT_REF_NAME, $CI_BUILD_STAGE, $CI_REGISTRY, $CI_REGISTRY_IMAGE, $CI_COMMIT_REF_NAME, $CI_COMMIT_SHORT_SHA, $CI_OPEN_MERGE_REQUESTS, $CI_PIPELINE_SOURCE" # debug
+  - export GRADLE_USER_HOME=`pwd`/.gradle
+  - echo $TAG_PREPROD
+
 
 stages:
   - build
@@ -10,11 +29,6 @@ stages:
   - deploy
 
 
-before_script:
-  - echo `pwd` # debug
-  - echo "$CI_COMMIT_REF_SLUG, $CI_MERGE_REQUEST_TARGET_BRANCH_NAME, $CI_MERGE_REQUEST_TARGET_BRANCH_NAME, $CI_COMMIT_BRANCH, $CI_BUILD_NAME, $CI_BUILD_REF_NAME, $CI_COMMIT_REF_NAME, $CI_BUILD_STAGE, $CI_REGISTRY, $CI_REGISTRY_IMAGE, $CI_COMMIT_REF_NAME, $CI_COMMIT_SHORT_SHA, $CI_OPEN_MERGE_REQUESTS, $CI_PIPELINE_SOURCE" # debug
-  - export GRADLE_USER_HOME=`pwd`/.gradle
-  - echo $TAG_PREPROD
 
 build:
   stage: build
