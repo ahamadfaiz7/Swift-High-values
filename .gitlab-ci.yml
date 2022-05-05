@@ -2,13 +2,12 @@ image: docker:20.10.14
 services:
   - docker:20.10.14-dind
 
+
 stages:
   - build
   - test
   - package
   - deploy
-
-
 
 
 before_script:
@@ -17,7 +16,7 @@ before_script:
   - export GRADLE_USER_HOME=`pwd`/.gradle
   - echo $TAG_PREPROD
 
-.build:
+build:
   stage: build
   image: openjdk:17-alpine
   script:
