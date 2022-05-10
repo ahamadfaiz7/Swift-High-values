@@ -21,6 +21,9 @@ build/
 *.iws
 *.iml
 *.ipr
+*.jar
+*.bat
+*.DS_Store
 out/
 
 ### NetBeans ###
