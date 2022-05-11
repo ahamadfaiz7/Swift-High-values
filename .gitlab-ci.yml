@@ -102,3 +102,25 @@ build preprod image:
   # only:
   #   # - release-*
   #   - /^release-.*$/
+
+
+deploy_devsrv:
+  image: docker:20.10.14
+  services:
+    - docker:20.10.14-dind
+  stage: deploy
+  script:
+    - apk update && apk add openssh-client
+    - mkdir -p ~/.ssh
+    - echo "$DEV_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - eval $(ssh-agent -s)
+    - ssh-add ~/.ssh/id_rsa
+    - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@docsrv" 'cd /opt/docker/containers/flexpay-funding && docker-compose down --remove-orphans'
+    - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@docsrv" 'cd /opt/docker/containers/flexpay-funding && docker-compose up -d'
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == "develop" && $CI_PIPELINE_SOURCE == "push"'
+    
+    # refs:
+    #   - merge_requests
+
