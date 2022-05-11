@@ -98,7 +98,7 @@ build preprod image:
     - docker image ls
     - docker push --all-tags $TAG_PREPROD
   rules:
-    - if: '$CI_COMMIT_REF_NAME =~ "/^release-.*$/" && $CI_PIPELINE_SOURCE == "push"'
+    - if: '$CI_COMMIT_REF_NAME =~ "/^release/" && $CI_PIPELINE_SOURCE == "push"'
   # only:
   #   # - release-*
   #   - /^release-.*$/
