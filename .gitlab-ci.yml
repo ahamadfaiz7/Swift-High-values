@@ -83,7 +83,6 @@ build dev image:
     - docker build  -t "$TAG_DEV" -t "$TAG_DEV:$APP_VERSION" .
     - docker image ls
     - docker push --all-tags $TAG_DEV
-  # workflow:
   rules:
     - if: '$CI_COMMIT_REF_NAME == "develop" && $CI_PIPELINE_SOURCE == "push"'
       # when: never
