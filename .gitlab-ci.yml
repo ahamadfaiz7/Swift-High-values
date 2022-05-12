@@ -80,7 +80,7 @@ build dev image:
     - echo "Building dev image"
     - echo $CI_COMMIT_BRANCH
     - echo $FP_CI_REGISTRY_PASSWORD | docker login  -u $FP_CI_REGISTRY_USER $FP_CI_REGISTRY --password-stdin
-    - docker build  -t "registry.flexpay.co.za:5000/flexpay-funding-dev" -t "$TAG_DEV:$APP_VERSION" .
+    - docker build  -t "$TAG_DEV" -t "$TAG_DEV:$APP_VERSION" .
     - docker image ls
     - docker push --all-tags $TAG_DEV
   rules:
