@@ -21,6 +21,7 @@ before_script:
   - echo "$CI_COMMIT_REF_SLUG, $CI_MERGE_REQUEST_TARGET_BRANCH_NAME, $CI_MERGE_REQUEST_TARGET_BRANCH_NAME, $CI_COMMIT_BRANCH, $CI_BUILD_NAME, $CI_BUILD_REF_NAME, $CI_COMMIT_REF_NAME, $CI_BUILD_STAGE, $CI_REGISTRY, $CI_REGISTRY_IMAGE, $CI_COMMIT_REF_NAME, $CI_COMMIT_SHORT_SHA, $CI_OPEN_MERGE_REQUESTS, $CI_PIPELINE_SOURCE" # debug
   - export GRADLE_USER_HOME=`pwd`/.gradle
   - echo $TAG_PREPROD
+  - echo $FP_CI_REGISTRY_PASSWORD | docker login  -u $FP_CI_REGISTRY_USER $FP_CI_REGISTRY --password-stdin
 
 
 stages:
@@ -116,6 +117,7 @@ deploy_devsrv:
     - chmod 600 ~/.ssh/id_rsa
     - eval $(ssh-agent -s)
     - ssh-add ~/.ssh/id_rsa
+    - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@docsrv" 'echo $FP_CI_REGISTRY_PASSWORD | docker login  -u $FP_CI_REGISTRY_USER $FP_CI_REGISTRY --password-stdin'
     - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@docsrv" 'cd /opt/docker/containers/flexpay-funding && docker-compose down --remove-orphans'
     - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@docsrv" 'cd /opt/docker/containers/flexpay-funding && docker-compose up -d'
   rules:
