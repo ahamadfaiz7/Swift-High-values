@@ -139,7 +139,7 @@ deploy_preprod:
     - eval $(ssh-agent -s)
     - ssh-add ~/.ssh/id_rsa
     # - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@registry.flexpay.co.za"  "docker login  -u $FP_CI_REGISTRY_USER -p $FP_CI_REGISTRY_PASSWORD $FP_CI_REGISTRY"
-    - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@docker86-h1"  'echo $FP_CI_REGISTRY_PASSWORD | docker login  -u $FP_CI_REGISTRY_USER $FP_CI_REGISTRY --password-stdin'
+    - echo $FP_CI_REGISTRY_PASSWORD | ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@docker86-h1"  'docker login  -u $FP_CI_REGISTRY_USER $FP_CI_REGISTRY --password-stdin'
     - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@docker86-h1" 'cd /opt/docker/containers/flexpay-auth && docker-compose down --remove-orphans'
     - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@docker86-h1" 'docker rmi registry.flexpay.co.za:5000/flexpay-auth-preprod'
     - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@docker86-h1" 'cd /opt/docker/containers/flexpay-auth && docker-compose up -d'
