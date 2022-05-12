@@ -142,7 +142,7 @@ deploy_preprod:
     # - echo $FP_CI_REGISTRY_PASSWORD | ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@docker86-h1"  'docker login  -u $FP_CI_REGISTRY_USER $FP_CI_REGISTRY --password-stdin'
     - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@docker86-h1" 'cd /opt/docker/containers/flexpay-funding && docker-compose down --remove-orphans'
     - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@docker86-h1" 'docker rmi registry.flexpay.co.za:5000/flexpay-funding-preprod'
-    - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@docker86-h1" 'cd /opt/docker/containers/flexpay-auth && docker-compose up -d'
+    - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@docker86-h1" 'cd /opt/docker/containers/flexpay-funding && docker-compose up -d'
   
   only:
     - "/^release/"
