@@ -52,7 +52,7 @@ build_dev:
     expire_in: 2 hrs
 
 
-.spotbugs-sast:
+spotbugs-sast:
   dependencies:
     - build_dev
   variables:
