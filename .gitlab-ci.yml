@@ -122,6 +122,7 @@ deploy_devsrv:
     - ssh-add ~/.ssh/id_rsa
     # - echo $FP_CI_REGISTRY_PASSWORD | ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@docsrv" 'docker login  -u $FP_CI_REGISTRY_USER $FP_CI_REGISTRY --password-stdin'
     - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@fp-dev-dh1" 'cd /opt/docker/containers/flexpay-funding && docker-compose down --remove-orphans'
+    - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@fp-dev-dh1" 'docker rmi registry.flexpay.co.za:5000/flexpay-funding-dev'
     - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@fp-dev-dh1" 'cd /opt/docker/containers/flexpay-funding && docker-compose up -d'
     
   rules:
