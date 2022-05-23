@@ -84,8 +84,11 @@ build dev image:
     - docker build  -t "$TAG_DEV" -t "$TAG_DEV:$APP_VERSION" .
     - docker image ls
     - docker push --all-tags $TAG_DEV
-  rules:
-    - if: '$CI_COMMIT_REF_NAME == "develop" && $CI_PIPELINE_SOURCE == "push"'
+  except:
+    - /^release/
+
+  # rules:
+  #   - if: '$CI_COMMIT_REF_NAME == "develop" && $CI_PIPELINE_SOURCE == "push"'
       # when: never
 
 
@@ -102,7 +105,7 @@ build preprod image:
   #   - if: '$CI_COMMIT_REF_NAME =~ "/^release/" && $CI_PIPELINE_SOURCE == "push"'
   only:
     # - release-*
-    - /^release/
+    - "/^release/"
 
 
 deploy_devsrv:
