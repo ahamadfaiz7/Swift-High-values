@@ -31,7 +31,7 @@ stages:
   - deploy
 
 
-include:
+.include:
   - template: Security/SAST.gitlab-ci.yml
 
 
@@ -52,7 +52,7 @@ build_dev:
     expire_in: 2 hrs
 
 
-spotbugs-sast:
+.spotbugs-sast:
   dependencies:
     - build_dev
   variables:
@@ -85,7 +85,7 @@ build dev image:
     - docker image ls
     - docker push --all-tags $TAG_DEV
   except:
-    - /^release/
+    - "/^release/"
 
   # rules:
   #   - if: '$CI_COMMIT_REF_NAME == "develop" && $CI_PIPELINE_SOURCE == "push"'
