@@ -110,7 +110,7 @@ build_dev:
       - .gradle
 
 
-build_stage:
+build preprod:
   # rules:
   #   - if: '$CI_COMMIT_REF_NAME =~ "/^release/" || $CI_BUILD_REF_NAME =~ "/^release/"'
   extends: .build
