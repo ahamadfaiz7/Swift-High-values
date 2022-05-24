@@ -39,7 +39,7 @@ stages:
   image: openjdk:17-alpine
   script:
     - |
-      if [[ $CI_COMMIT_BRANCH =~ "^release-*" ]]; then
+      if [[ $CI_COMMIT_BRANCH =~ "^release/*" ]]; then
       cat ./src/main/resources/application-preprod.properties > ./src/main/resources/application.properties
       elif [[ $CI_COMMIT_BRANCH == "main" ]]; then
       cat ./src/main/resources/application-prod.properties > ./src/main/resources/application.properties
@@ -58,7 +58,7 @@ stages:
   artifacts:
     paths:
       - build/libs/*.jar
-    expire_in: 2 hrs
+    expire_in: 4 hrs
 
 
 
@@ -108,6 +108,16 @@ build_dev:
     paths:
       - build
       - .gradle
+
+
+build_stage:
+  # rules:
+  #   - if: '$CI_COMMIT_REF_NAME =~ "/^release/" || $CI_BUILD_REF_NAME =~ "/^release/"'
+  extends: .build
+  only:
+    # - release-*
+    - "/^release/"
+
 
 build dev image:
   stage: package
