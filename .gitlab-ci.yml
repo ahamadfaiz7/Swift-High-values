@@ -63,12 +63,15 @@ stages:
 
 
 build_dev:
-  rules:
-    - if: $CI_COMMIT_REF_NAME =~ '/^main/' || $CI_COMMIT_REF_NAME =~ '/^release/'
-      when: never
-    - if: '$CI_COMMIT_TAG || $CI_COMMIT_BRANCH'
+  # rules:
+  #   - if: $CI_COMMIT_REF_NAME =~ '/^main/' || $CI_COMMIT_REF_NAME =~ '/^release/'
+  #     when: never
+  #   - if: '$CI_COMMIT_TAG || $CI_COMMIT_BRANCH'
 
   extends: .build
+  except:
+    - "/^release/"
+    - "/^main/"
 
   # stage: build
   # image: openjdk:17-alpine
