@@ -25,6 +25,7 @@ before_script:
 
 
 stages:
+  - linting
   - build
   - test
   - package
@@ -33,6 +34,17 @@ stages:
 
 .include:
   - template: Security/SAST.gitlab-ci.yml
+
+lint:
+  stage: linting
+  image: openjdk:17-alpine
+  script: ./gradlew lint
+  cache:
+    key: "$CI_COMMIT_REF_NAME"
+    policy: pull
+    paths:
+      - build
+      - .gradle
 
 .build:
   stage: build
