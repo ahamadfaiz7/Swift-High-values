@@ -35,7 +35,7 @@ stages:
 .include:
   - template: Security/SAST.gitlab-ci.yml
 
-lint:
+.lint:
   stage: linting
   image: openjdk:17-alpine
   script: ./gradlew lint
