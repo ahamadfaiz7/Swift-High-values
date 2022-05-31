@@ -112,8 +112,8 @@ spotbugs-sast:
   artifacts:
     reports:
       sast: gl-sast-report.json
-  only:
-    - merge_request
+#   only:
+#     - merge_request
 
 
 test:
@@ -193,8 +193,8 @@ deploy_devsrv:
   #   - if: '$CI_COMMIT_REF_NAME == "develop" && $CI_PIPELINE_SOURCE == "push"'
     
     # refs:
-    only:
-      - develop
+  only:
+    - develop
 
 
 deploy_preprod:
