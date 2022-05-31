@@ -25,6 +25,7 @@ before_script:
 
 
 stages:
+  - .pre
   - linting
   - build
   - test
@@ -32,7 +33,7 @@ stages:
   - deploy
 
 
-.include:
+include:
   - template: Security/SAST.gitlab-ci.yml
 
 .lint:
@@ -75,12 +76,15 @@ stages:
 
 
 build_dev:
-  rules:
-    - if: $CI_COMMIT_REF_NAME =~ '/^main/' || $CI_COMMIT_REF_NAME =~ '/^release.*$/'
-      when: never
-    - if: '$CI_COMMIT_TAG || $CI_COMMIT_BRANCH'
-
+  only:
+    - merge_request
   extends: .build
+
+  # rules:
+  #   - if: $CI_COMMIT_REF_NAME =~ '/^main/' || $CI_COMMIT_REF_NAME =~ '/^release.*$/'
+  #     when: never
+  #   - if: '$CI_COMMIT_TAG || $CI_COMMIT_BRANCH'
+
 
   # stage: build
   # image: openjdk:17-alpine
@@ -98,7 +102,7 @@ build_dev:
   #   expire_in: 2 hrs
 
 
-.spotbugs-sast:
+spotbugs-sast:
   dependencies:
     - build_dev
   variables:
@@ -108,10 +112,12 @@ build_dev:
   artifacts:
     reports:
       sast: gl-sast-report.json
+  only:
+    - merge_request
 
 
-.test:
-  stage: test
+test:
+  stage: .pre
   image: openjdk:17-alpine
   script: ./gradlew check
   cache:
@@ -140,8 +146,10 @@ build dev image:
     - docker build  -t "$TAG_DEV" -t "$TAG_DEV:$APP_VERSION" .
     - docker image ls
     - docker push --all-tags $TAG_DEV
-  except:
-    - "/^release/"
+  only:
+    - develop
+  # except:
+  #   - "/^release/"
 
   # rules:
   #   - if: '$CI_COMMIT_REF_NAME == "develop" && $CI_PIPELINE_SOURCE == "push"'
@@ -181,11 +189,12 @@ deploy_devsrv:
     - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@fp-dev-dh1" 'docker rmi registry.flexpay.co.za:5000/flexpay-funding-dev'
     - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@fp-dev-dh1" 'cd /opt/docker/containers/flexpay-funding && docker-compose up -d'
     
-  rules:
-    - if: '$CI_COMMIT_REF_NAME == "develop" && $CI_PIPELINE_SOURCE == "push"'
+  # rules:
+  #   - if: '$CI_COMMIT_REF_NAME == "develop" && $CI_PIPELINE_SOURCE == "push"'
     
     # refs:
-    #   - merge_requests
+    only:
+      - develop
 
 
 deploy_preprod:
