@@ -30,7 +30,10 @@ public class SwiftFundingServiceClient {
 
         SwiftFundingResponse swiftFundingResponse = null;
         try {
+            LOG.info("Making API call to-> "+ otpServiceUrl);
             swiftFundingResponse = restTemplate.postForObject(otpServiceUrl, swiftInFundingRequest, SwiftFundingResponse.class);
+            LOG.info("API call to "+ otpServiceUrl+ " has recieved a response.");
+            LOG.info("API response message-> "+swiftFundingResponse.getResponseMessage());
         } catch (Exception e) {
             LOG.error(String.format("Error calling service[%s]", otpServiceUrl), e);
         }
