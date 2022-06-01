@@ -1,7 +1,7 @@
 
 FROM openjdk:17-alpine
-RUN addgroup -S appuser && adduser -S appuser -G appuser
-USER appuser:appuser
+#RUN addgroup -S appuser && adduser -S appuser -G appuser
+#USER appuser:appuser
 WORKDIR /app
 VOLUME /tmp
 COPY build/libs/flexpay-funding-0.0.1-SNAPSHOT.jar /app/app.jar
