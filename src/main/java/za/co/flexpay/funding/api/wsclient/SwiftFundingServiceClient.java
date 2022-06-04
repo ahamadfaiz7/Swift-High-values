@@ -33,9 +33,10 @@ public class SwiftFundingServiceClient {
             LOG.info("Making API call to-> "+ otpServiceUrl);
             swiftFundingResponse = restTemplate.postForObject(otpServiceUrl, swiftInFundingRequest, SwiftFundingResponse.class);
             LOG.info("API call to "+ otpServiceUrl+ " has recieved a response.");
-            LOG.info("API response message-> "+swiftFundingResponse.getResponseMessage());
+            LOG.info("API response message-> "+swiftFundingResponse.getErrorDescription());
         } catch (Exception e) {
-            LOG.error(String.format("Error calling service[%s]", otpServiceUrl), e);
+            swiftFundingResponse = new SwiftFundingResponse(swiftInFundingRequest.getUniqueEndToEndIdentifier(),"DS28","Return for Technical Reason");
+            LOG.error(String.format("Error calling service[%s]", otpServiceUrl), e.getMessage());
         }
         return swiftFundingResponse;
     }

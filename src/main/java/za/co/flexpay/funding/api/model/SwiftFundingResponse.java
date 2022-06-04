@@ -4,32 +4,15 @@ import java.io.Serializable;
 
 public class SwiftFundingResponse implements Serializable {
 
-    private String responseCode;
-    private String responseMessage;
     private String transactionIdentifier;
+    private String errorNo;
+    private String errorDescription;
 
-    public SwiftFundingResponse() {
-    }
 
-    public SwiftFundingResponse(String responseCode, String responseMessage) {
-        this.responseCode = responseCode;
-        this.responseMessage = responseMessage;
-    }
-
-    public String getResponseCode() {
-        return responseCode;
-    }
-
-    public void setResponseCode(String responseCode) {
-        this.responseCode = responseCode;
-    }
-
-    public String getResponseMessage() {
-        return responseMessage;
-    }
-
-    public void setResponseMessage(String responseMessage) {
-        this.responseMessage = responseMessage;
+    public SwiftFundingResponse(String transactionIdentifier, String errorNo, String errorDescription) {
+        this.transactionIdentifier = transactionIdentifier;
+        this.errorNo = errorNo;
+        this.errorDescription = errorDescription;
     }
 
     public String getTransactionIdentifier() {
@@ -38,5 +21,21 @@ public class SwiftFundingResponse implements Serializable {
 
     public void setTransactionIdentifier(String transactionIdentifier) {
         this.transactionIdentifier = transactionIdentifier;
+    }
+
+    public String getErrorNo() {
+        return errorNo;
+    }
+
+    public void setErrorNo(String errorNo) {
+        this.errorNo = errorNo;
+    }
+
+    public String getErrorDescription() {
+        return errorDescription;
+    }
+
+    public void setErrorDescription(String errorDescription) {
+        this.errorDescription = errorDescription;
     }
 }

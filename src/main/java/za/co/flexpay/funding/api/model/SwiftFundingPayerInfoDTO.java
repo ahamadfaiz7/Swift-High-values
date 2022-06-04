@@ -24,7 +24,7 @@ public class SwiftFundingPayerInfoDTO implements Serializable {
     private String streetNumber;
     private String streetName;
     private String cityTown;
-    private Integer province;
+    private String province;
     private String country;
 
     public String getAccountNumber() {
@@ -123,11 +123,11 @@ public class SwiftFundingPayerInfoDTO implements Serializable {
         this.cityTown = cityTown;
     }
 
-    public Integer getProvince() {
+    public String getProvince() {
         return province;
     }
 
-    public void setProvince(Integer province) {
+    public void setProvince(String province) {
         this.province = province;
     }
 
