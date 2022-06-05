@@ -156,7 +156,7 @@ build dev image:
     - echo "Building dev image"
     - echo $CI_COMMIT_BRANCH
     - echo $FP_CI_REGISTRY_PASSWORD | docker login  -u $FP_CI_REGISTRY_USER $FP_CI_REGISTRY --password-stdin
-    - docker build  -t "$TAG_DEV" -t "$TAG_DEV:$APP_VERSION" .
+    - docker build  --compress -t "$TAG_DEV" -t "$TAG_DEV:$CI_COMMIT_SHORT_SHA" .
     - docker image ls
     - docker push --all-tags $TAG_DEV
   only:
@@ -175,7 +175,7 @@ build preprod image:
     - echo "Building Preprod image"
     - echo $CI_COMMIT_BRANCH
     - echo $FP_CI_REGISTRY_PASSWORD | docker login  -u $FP_CI_REGISTRY_USER $FP_CI_REGISTRY --password-stdin
-    - docker build  -t "$TAG_PREPROD" -t "$TAG_PREPROD:$APP_VERSION" .
+    - docker build  -t "$TAG_PREPROD" -t "$TAG_PREPROD:$CI_COMMIT_SHORT_SHA" .
     - docker image ls
     - docker push --all-tags $TAG_PREPROD
   only:
