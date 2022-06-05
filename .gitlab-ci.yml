@@ -26,18 +26,22 @@ before_script:
 
 stages:
   - .pre
-  - linting
-  - build
   - test
-  - package
-  - deploy
+  - Test and Lint
+  - build
+  - Build develop
+  - Deploy develop
+  - Build preprod
+  - Deploy preprod
+  - Build prod
+  - Deploy prod
 
 
 include:
   - template: Security/SAST.gitlab-ci.yml
 
 .lint:
-  stage: linting
+  stage: Test and Lint
   image: openjdk:17-alpine
   script: ./gradlew lint
   cache:
@@ -99,9 +103,10 @@ include:
   #   expire_in: 2 hrs
 
 
+
 spotbugs-sast:
-  dependencies:
-    - build_dev
+#   dependencies:
+#     - build_dev
   variables:
     SECURE_LOG_LEVEL: "debug"
     SAST_ANALYZER_IMAGE: "registry.gitlab.com/gitlab-org/security-products/analyzers/spotbugs:2.28.4"
@@ -110,10 +115,10 @@ spotbugs-sast:
     reports:
       sast: gl-sast-report.json
 #   only:
-#     - merge_request
+#     - test
 
 
-test:
+Test:
   stage: test
   image: openjdk:17-alpine
   script: ./gradlew check
@@ -123,28 +128,35 @@ test:
     paths:
       - build
       - .gradle
+  only:
+    - merge_request
+
 
 build_dev:
   only:
-    # - merge_request
     - develop
   extends: .build
 
-build preprod:
-  # rules:
-  #   - if: '$CI_COMMIT_REF_NAME =~ "/^release/" || $CI_BUILD_REF_NAME =~ "/^release/"'
+
+build_preprod:
   extends: .build
   only:
     - "/^release*$/"
 
 
+build_prod:
+  extends: .build
+  only:
+    - main
+
+
 build dev image:
-  stage: package
+  stage: Build develop
   script:
     - echo "Building dev image"
     - echo $CI_COMMIT_BRANCH
     - echo $FP_CI_REGISTRY_PASSWORD | docker login  -u $FP_CI_REGISTRY_USER $FP_CI_REGISTRY --password-stdin
-    - docker build  -t "$TAG_DEV" -t "$TAG_DEV:$APP_VERSION" .
+    - docker build  --compress -t "$TAG_DEV" -t "$TAG_DEV:$CI_COMMIT_SHORT_SHA" .
     - docker image ls
     - docker push --all-tags $TAG_DEV
   only:
@@ -158,16 +170,14 @@ build dev image:
 
 
 build preprod image:
-  stage: package
+  stage: Build preprod
   script:
     - echo "Building Preprod image"
     - echo $CI_COMMIT_BRANCH
     - echo $FP_CI_REGISTRY_PASSWORD | docker login  -u $FP_CI_REGISTRY_USER $FP_CI_REGISTRY --password-stdin
-    - docker build  -t "$TAG_PREPROD" -t "$TAG_PREPROD:$APP_VERSION" .
+    - docker build  -t "$TAG_PREPROD" -t "$TAG_PREPROD:$CI_COMMIT_SHORT_SHA" .
     - docker image ls
     - docker push --all-tags $TAG_PREPROD
-  # rules:
-  #   - if: '$CI_COMMIT_REF_NAME =~ "/^release/" && $CI_PIPELINE_SOURCE == "push"'
   only:
     # - release-*
     - "/^release*$/"
@@ -177,7 +187,7 @@ deploy_devsrv:
   image: docker:20.10.14
   services:
     - docker:20.10.14-dind
-  stage: deploy
+  stage: Deploy develop
   script:
     - apk update && apk add openssh-client
     - mkdir -p ~/.ssh
@@ -189,17 +199,13 @@ deploy_devsrv:
     - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@fp-dev-dh1" 'cd /opt/docker/containers/flexpay-funding && docker-compose down --remove-orphans'
     - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@fp-dev-dh1" 'docker rmi registry.flexpay.co.za:5000/flexpay-funding-dev'
     - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@fp-dev-dh1" 'cd /opt/docker/containers/flexpay-funding && docker-compose up -d'
-    
-  # rules:
-  #   - if: '$CI_COMMIT_REF_NAME == "develop" && $CI_PIPELINE_SOURCE == "push"'
-    
-    # refs:
+ 
   only:
     - develop
 
 
 deploy_preprod:
-  stage: deploy
+  stage: Deploy preprod
   dependencies:
     - build dev image
   script:
@@ -211,10 +217,31 @@ deploy_preprod:
     - ssh-add ~/.ssh/id_rsa
     # - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@registry.flexpay.co.za"  "docker login  -u $FP_CI_REGISTRY_USER -p $FP_CI_REGISTRY_PASSWORD $FP_CI_REGISTRY"
     # - echo $FP_CI_REGISTRY_PASSWORD | ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@docker86-h1"  'docker login  -u $FP_CI_REGISTRY_USER $FP_CI_REGISTRY --password-stdin'
-    - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@docker86-h1" 'cd /opt/docker/containers/flexpay-funding && docker-compose down --remove-orphans'
-    - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@docker86-h1" 'docker rmi registry.flexpay.co.za:5000/flexpay-funding-preprod'
-    - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@docker86-h1" 'cd /opt/docker/containers/flexpay-funding && docker-compose up -d'
+    - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@fp-preprod-dh1" 'cd /opt/docker/containers/flexpay-funding && docker-compose down --remove-orphans'
+    - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@fp-preprod-dh1" 'docker rmi registry.flexpay.co.za:5000/flexpay-funding-preprod'
+    - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@fp-preprod-dh1" 'cd /opt/docker/containers/flexpay-funding && docker-compose up -d'
   
   only:
     - "/^release*$/"
+
+
+deploy_prod:
+  stage: Deploy prod
+  dependencies:
+    - build dev image
+  script:
+    - apk update && apk add openssh-client
+    - mkdir -p ~/.ssh
+    - echo "$DEV_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - eval $(ssh-agent -s)
+    - ssh-add ~/.ssh/id_rsa
+    # - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@registry.flexpay.co.za"  "docker login  -u $FP_CI_REGISTRY_USER -p $FP_CI_REGISTRY_PASSWORD $FP_CI_REGISTRY"
+    # - echo $FP_CI_REGISTRY_PASSWORD | ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@docker86-h1"  'docker login  -u $FP_CI_REGISTRY_USER $FP_CI_REGISTRY --password-stdin'
+    - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@fp-prod-dh1" 'cd /opt/docker/containers/flexpay-funding && docker-compose down --remove-orphans'
+    - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@fp-prod-dh1" 'docker rmi registry.flexpay.co.za:5000/flexpay-funding-preprod'
+    - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@fp-prod-dh1" 'cd /opt/docker/containers/flexpay-funding && docker-compose up -d'
+  
+  only:
+    - main
 
