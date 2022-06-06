@@ -48,9 +48,8 @@ public class SwiftFundingApi {
     @PostMapping(value = "/swift-funding")
     public SwiftFundingResponse processRemoteMessage(@RequestHeader MultiValueMap<String, String> headers, @RequestBody SwiftInFundingRequest request) throws UnauthorisedException, GenericException {
         try {
-            String username = String.valueOf(headers.get("username")).replaceAll("[\\[\\]]", "");
-            String password = String.valueOf(headers.get("password")).replaceAll("[\\[\\]]", "");
-            if (!authenticationService.validateRequest(username, password)) {
+            String authorizationData = String.valueOf(headers.get("authorization")).replaceAll("[\\[\\]]", "");
+            if (!authenticationService.validateRequest(authorizationData)) {
                 throw new UnauthorisedException("Unauthorized");
             }
             SwiftFundingResponse response = swiftFundingServiceClient.swiftFundAccount(request);
