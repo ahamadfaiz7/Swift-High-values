@@ -78,32 +78,6 @@ include:
     expire_in: 4 hrs
 
 
-
-
-
-  # rules:
-  #   - if: $CI_COMMIT_REF_NAME =~ '/^main/' || $CI_COMMIT_REF_NAME =~ '/^release.*$/'
-  #     when: never
-  #   - if: '$CI_COMMIT_TAG || $CI_COMMIT_BRANCH'
-
-
-  # stage: build
-  # image: openjdk:17-alpine
-  # script:
-  #   - ./gradlew  build 
-  # cache:
-  #   key: "$CI_COMMIT_REF_NAME"
-  #   policy: push
-  #   paths:
-  #     - build
-  #     - .gradle
-  # artifacts:
-  #   paths:
-  #     - build/libs/*.jar
-  #   expire_in: 2 hrs
-
-
-
 spotbugs-sast:
 #   dependencies:
 #     - build_dev
@@ -141,7 +115,7 @@ build_dev:
 build_preprod:
   extends: .build
   only:
-    - "/^release*$/"
+    - "/^(release)\//"
 
 
 build_prod:
@@ -180,7 +154,7 @@ build preprod image:
     - docker push --all-tags $TAG_PREPROD
   only:
     # - release-*
-    - "/^release*$/"
+    - "/^(release)\//"
 
 
 deploy_devsrv:
@@ -222,7 +196,7 @@ deploy_preprod:
     - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@fp-preprod-dh1" 'cd /opt/docker/containers/flexpay-funding && docker-compose up -d'
   
   only:
-    - "/^release*$/"
+    - "/^(release)\//"
 
 
 deploy_prod:
@@ -239,7 +213,7 @@ deploy_prod:
     # - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@registry.flexpay.co.za"  "docker login  -u $FP_CI_REGISTRY_USER -p $FP_CI_REGISTRY_PASSWORD $FP_CI_REGISTRY"
     # - echo $FP_CI_REGISTRY_PASSWORD | ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@docker86-h1"  'docker login  -u $FP_CI_REGISTRY_USER $FP_CI_REGISTRY --password-stdin'
     - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@fp-prod-dh1" 'cd /opt/docker/containers/flexpay-funding && docker-compose down --remove-orphans'
-    - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@fp-prod-dh1" 'docker rmi registry.flexpay.co.za:5000/flexpay-funding-preprod'
+    - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@fp-prod-dh1" 'docker rmi registry.flexpay.co.za:5000/flexpay-funding-prod'
     - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@fp-prod-dh1" 'cd /opt/docker/containers/flexpay-funding && docker-compose up -d'
   
   only:
