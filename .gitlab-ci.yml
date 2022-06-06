@@ -115,7 +115,7 @@ build_dev:
 build_preprod:
   extends: .build
   only:
-    - "/^(release)\//"
+    - "/^release/"
 
 
 build_prod:
@@ -154,7 +154,7 @@ build preprod image:
     - docker push --all-tags $TAG_PREPROD
   only:
     # - release-*
-    - "/^(release)\//"
+    - "/^release/"
 
 
 deploy_devsrv:
@@ -196,7 +196,7 @@ deploy_preprod:
     - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@fp-preprod-dh1" 'cd /opt/docker/containers/flexpay-funding && docker-compose up -d'
   
   only:
-    - "/^(release)\//"
+    - "/^release/"
 
 
 deploy_prod:
@@ -218,4 +218,3 @@ deploy_prod:
   
   only:
     - main
-
