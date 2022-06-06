@@ -13,9 +13,9 @@ import javax.crypto.spec.SecretKeySpec;
 public class AuthenticationService {
 
     private static final Logger LOG = LoggerFactory.getLogger(AuthenticationService.class);
-    @Value("${access.bank.hvc-api.username}")
+    @Value("${flexpay.funding.hvc-api.username}")
     private String username;
-    @Value("${access.bank.hvc-api.password}")
+    @Value("${flexpay.funding.hvc-api.password}")
     private String password;
 
     /**
@@ -26,7 +26,6 @@ public class AuthenticationService {
      * @return boolean
      */
     public boolean validateRequest(String username, String password) {
-
         if (username == null || password == null) {
             return false;
         }
