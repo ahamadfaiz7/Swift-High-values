@@ -153,7 +153,6 @@ build preprod image:
     - docker image ls
     - docker push --all-tags $TAG_PREPROD
   only:
-    # - release-*
     - "/^release/"
 
 
@@ -189,8 +188,6 @@ deploy_preprod:
     - chmod 600 ~/.ssh/id_rsa
     - eval $(ssh-agent -s)
     - ssh-add ~/.ssh/id_rsa
-    # - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@registry.flexpay.co.za"  "docker login  -u $FP_CI_REGISTRY_USER -p $FP_CI_REGISTRY_PASSWORD $FP_CI_REGISTRY"
-    # - echo $FP_CI_REGISTRY_PASSWORD | ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@docker86-h1"  'docker login  -u $FP_CI_REGISTRY_USER $FP_CI_REGISTRY --password-stdin'
     - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@fp-preprod-dh1" 'cd /opt/docker/containers/flexpay-funding && docker-compose down --remove-orphans'
     - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@fp-preprod-dh1" 'docker rmi registry.flexpay.co.za:5000/flexpay-funding-preprod'
     - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@fp-preprod-dh1" 'cd /opt/docker/containers/flexpay-funding && docker-compose up -d'
@@ -210,11 +207,8 @@ deploy_prod:
     - chmod 600 ~/.ssh/id_rsa
     - eval $(ssh-agent -s)
     - ssh-add ~/.ssh/id_rsa
-    # - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@registry.flexpay.co.za"  "docker login  -u $FP_CI_REGISTRY_USER -p $FP_CI_REGISTRY_PASSWORD $FP_CI_REGISTRY"
-    # - echo $FP_CI_REGISTRY_PASSWORD | ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@docker86-h1"  'docker login  -u $FP_CI_REGISTRY_USER $FP_CI_REGISTRY --password-stdin'
     - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@fp-prod-dh1" 'cd /opt/docker/containers/flexpay-funding && docker-compose down --remove-orphans'
     - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@fp-prod-dh1" 'docker rmi registry.flexpay.co.za:5000/flexpay-funding-prod'
     - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@fp-prod-dh1" 'cd /opt/docker/containers/flexpay-funding && docker-compose up -d'
-  
   only:
     - main
