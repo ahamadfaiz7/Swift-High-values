@@ -2,6 +2,8 @@ image: docker:20.10.14
 services:
   - docker:20.10.14-dind
 
+
+
 variables:
   GIT_STRATEGY: clone
   # Make sure that you get tags from git repository otherwise the release
@@ -9,20 +11,19 @@ variables:
   GIT_FETCH_EXTRA_FLAGS: --tags 
   GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.java.home=/opt/openjdk-17"
   APP_VERSION: $CI_PIPELINE_IID
-  TAG_APP: flexpay-funding
-  TAG_DEV: registry.flexpay.co.za:5000/$TAG_APP-dev
-  TAG_PREPROD: registry.flexpay.co.za:5000/$TAG_APP-preprod
-  TAG_PROD: registry.flexpay.co.za:5000/$TAG_APP-prod
-  TAG_LATEST: registry.flexpay.co.za:5000/$TAG_APP:latest
-  TAG_COMMIT: registry.flexpay.co.za:5000/$TAG_APP/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA
+  TAG_REGISTRY: registry.flexpay.co.za:5000
+  TAG_DEV: registry.flexpay.co.za:5000/flexpay-funding-dev
+  TAG_PREPROD: registry.flexpay.co.za:5000/flexpay-funding-preprod
+  TAG_PROD: registry.flexpay.co.za:5000/flexpay-funding-prod
+  TAG_LATEST: registry.flexpay.co.za:5000/flexpay-funding:latest
+  TAG_COMMIT: registry.flexpay.co.za:5000/flexpay-funding/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA
 
 before_script:
   - echo `pwd` # debug
   - echo "$CI_COMMIT_REF_SLUG, $CI_MERGE_REQUEST_TARGET_BRANCH_NAME, $CI_MERGE_REQUEST_TARGET_BRANCH_NAME, $CI_COMMIT_BRANCH, $CI_BUILD_NAME, $CI_BUILD_REF_NAME, $CI_COMMIT_REF_NAME, $CI_BUILD_STAGE, $CI_REGISTRY, $CI_REGISTRY_IMAGE, $CI_COMMIT_REF_NAME, $CI_COMMIT_SHORT_SHA, $CI_OPEN_MERGE_REQUESTS, $CI_PIPELINE_SOURCE" # debug
   - export GRADLE_USER_HOME=`pwd`/.gradle
   - echo $TAG_PREPROD
-  - echo "$FP_CI_REGISTRY_PASSWORD | docker login  -u $FP_CI_REGISTRY_USER $FP_CI_REGISTRY --password-stdin"
-
+  # - "docker login  -u $FP_CI_REGISTRY_USER -p $FP_CI_REGISTRY_PASSWORD $FP_CI_REGISTRY"
 
 stages:
   - .pre
@@ -40,32 +41,37 @@ stages:
 include:
   - template: Security/SAST.gitlab-ci.yml
 
-.lint:
-  stage: Test and Lint
-  image: openjdk:17-alpine
-  script: ./gradlew lint
-  cache:
-    key: "$CI_COMMIT_REF_NAME"
-    policy: pull
-    paths:
-      - build
-      - .gradle
+
+
+spotbugs-sast:
+  # dependencies:
+  #   - build_dev
+  variables:
+    SECURE_LOG_LEVEL: "debug"
+    SAST_ANALYZER_IMAGE: "registry.gitlab.com/gitlab-org/security-products/analyzers/spotbugs:2.28.4"
+    COMPILE: "false"
+  artifacts:
+    reports:
+      sast: gl-sast-report.json
+
 
 .build:
   stage: build
   image: openjdk:17-alpine
   script:
     - |
-      if [[ $CI_COMMIT_BRANCH =~ "^release/*" ]]; then
+      if [[ $CI_COMMIT_BRANCH =~ "^release-*" ]]; then
       cat ./src/main/resources/application-preprod.properties > ./src/main/resources/application.properties
-      elif [[ $CI_COMMIT_BRANCH == "main" ]]; then
+      elif [[ $CI_COMMIT_TAG == *-release ]]; then
       cat ./src/main/resources/application-prod.properties > ./src/main/resources/application.properties
       else
       cat ./src/main/resources/application-dev.properties > ./src/main/resources/application.properties
       echo $CI_COMMIT_BRANCH
       fi
+      
     - cat ./src/main/resources/application.properties
     - ./gradlew  build 
+    
   cache:
     key: "$CI_COMMIT_REF_NAME"
     policy: push
@@ -78,21 +84,7 @@ include:
     expire_in: 4 hrs
 
 
-spotbugs-sast:
-#   dependencies:
-#     - build_dev
-  variables:
-    SECURE_LOG_LEVEL: "debug"
-    SAST_ANALYZER_IMAGE: "registry.gitlab.com/gitlab-org/security-products/analyzers/spotbugs:2.28.4"
-    COMPILE: "false"
-  artifacts:
-    reports:
-      sast: gl-sast-report.json
-#   only:
-#     - test
-
-
-Test:
+.test:
   stage: test
   image: openjdk:17-alpine
   script: ./gradlew check
@@ -102,26 +94,15 @@ Test:
     paths:
       - build
       - .gradle
-  only:
-    - merge_request
 
+##############################
+#   Develop Stage
+##############################
 
 build_dev:
   only:
     - develop
   extends: .build
-
-
-build_preprod:
-  extends: .build
-  only:
-    - "/^release/"
-
-
-build_prod:
-  extends: .build
-  only:
-    - main
 
 
 build dev image:
@@ -130,43 +111,11 @@ build dev image:
     - echo "Building dev image"
     - echo $CI_COMMIT_BRANCH
     - echo $FP_CI_REGISTRY_PASSWORD | docker login  -u $FP_CI_REGISTRY_USER $FP_CI_REGISTRY --password-stdin
-    - docker build  --compress -t "$TAG_DEV" -t "$TAG_DEV:$CI_COMMIT_SHORT_SHA" .
+    - docker build  -t "$TAG_DEV" -t "$TAG_DEV:$CI_COMMIT_SHORT_SHA" .
     - docker image ls
     - docker push --all-tags $TAG_DEV
   only:
     - develop
-  # except:
-  #   - "/^release/"
-
-  # rules:
-  #   - if: '$CI_COMMIT_REF_NAME == "develop" && $CI_PIPELINE_SOURCE == "push"'
-      # when: never
-
-
-build preprod image:
-  stage: Build preprod
-  script:
-    - echo "Building Preprod image"
-    - echo $CI_COMMIT_BRANCH
-    - echo $FP_CI_REGISTRY_PASSWORD | docker login  -u $FP_CI_REGISTRY_USER $FP_CI_REGISTRY --password-stdin
-    - docker build  -t "$TAG_PREPROD" -t "$TAG_PREPROD:$CI_COMMIT_SHORT_SHA" .
-    - docker image ls
-    - docker push --all-tags $TAG_PREPROD
-  only:
-    - "/^release/"
-
-
-build prod image:
-  stage: Build preprod
-  script:
-    - echo "Building Prod image"
-    - echo $CI_COMMIT_BRANCH
-    - echo $FP_CI_REGISTRY_PASSWORD | docker login  -u $FP_CI_REGISTRY_USER $FP_CI_REGISTRY --password-stdin
-    - docker build  -t "$TAG_PROD" -t "$TAG_PROD:$CI_COMMIT_SHORT_SHA" .
-    - docker image ls
-    - docker push --all-tags $TAG_PROD
-  only:
-    - main
 
 
 deploy_devsrv:
@@ -185,9 +134,31 @@ deploy_devsrv:
     - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@fp-dev-dh1" 'cd /opt/docker/containers/flexpay-funding && docker-compose down --remove-orphans'
     - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@fp-dev-dh1" 'docker rmi registry.flexpay.co.za:5000/flexpay-funding-dev'
     - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@fp-dev-dh1" 'cd /opt/docker/containers/flexpay-funding && docker-compose up -d'
- 
   only:
     - develop
+
+##############################
+#   Preprod Stage
+##############################
+
+build_preprod:
+  extends: .build
+  only:
+    - "/^release/"
+
+
+build preprod image:
+  stage: Build preprod
+  script:
+    - echo "Building Preprod image"
+    - echo $CI_COMMIT_BRANCH
+    - echo $FP_CI_REGISTRY_PASSWORD | docker login  -u $FP_CI_REGISTRY_USER $FP_CI_REGISTRY --password-stdin
+    - docker build  -t "$TAG_PREPROD" -t "$TAG_PREPROD:$CI_COMMIT_SHORT_SHA" .
+    - docker image ls
+    - docker push --all-tags $TAG_PREPROD
+  only:
+    # - release-*
+    - /^release-.*$/
 
 
 deploy_preprod:
@@ -208,6 +179,29 @@ deploy_preprod:
   only:
     - "/^release/"
 
+##############################
+#   Prod Stage
+##############################
+
+build_prod:
+  extends: .build
+  rules:
+    - if: "$CI_COMMIT_TAG =~ /^*-release$/"
+
+
+
+build prod image:
+  stage: Build prod
+  script:
+    - echo "Building Prod image"
+    - echo $FP_CI_REGISTRY_PASSWORD | docker login  -u $FP_CI_REGISTRY_USER $FP_CI_REGISTRY --password-stdin
+    - docker build  -t "$TAG_PROD" -t "$TAG_PROD:$CI_COMMIT_SHORT_SHA" .
+    - docker image ls
+    - docker push --all-tags $TAG_PROD
+  rules:
+    - if: "$CI_COMMIT_TAG =~ /^*-release$/"
+
+
 
 deploy_prod:
   stage: Deploy prod
@@ -223,5 +217,8 @@ deploy_prod:
     - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@fp-prod-dh1" 'cd /opt/docker/containers/flexpay-funding && docker-compose down --remove-orphans'
     - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@fp-prod-dh1" 'docker rmi registry.flexpay.co.za:5000/flexpay-funding-prod'
     - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@fp-prod-dh1" 'cd /opt/docker/containers/flexpay-funding && docker-compose up -d'
-  only:
-    - main
+  rules:
+    - if: "$CI_COMMIT_TAG =~ /^*-release$/"    
+  when: manual
+
+
