@@ -158,7 +158,7 @@ build preprod image:
     - docker push --all-tags $TAG_PREPROD
   only:
     # - release-*
-    - /^release-.*$/
+    - "/^release/"
 
 
 deploy_preprod:
