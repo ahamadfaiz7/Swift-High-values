@@ -57,6 +57,7 @@ public class SwiftFundingApi {
         } catch (Exception e) {
             LOG.error(e.getMessage());
             if (e instanceof UnauthorisedException) {
+                LOG.error("Authorization of incoming request failed.");
                 throw new UnauthorisedException("Unauthorized");
             } else {
                 throw new GenericException("Exception");
