@@ -1,5 +1,5 @@
 
-FROM openjdk:17-alpine
+FROM docker.io/library/openjdk:17-alpine
 #RUN addgroup -S appuser && adduser -S appuser -G appuser
 #USER appuser:appuser
 WORKDIR /app
