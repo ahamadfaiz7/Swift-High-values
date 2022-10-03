@@ -17,6 +17,7 @@ variables:
   PREPROD_SERVER: fp-preprod-dh1
   PROD_SERVER: fp-prod-dh1
 
+
 before_script:
   - echo `pwd` # debug
   - export GRADLE_USER_HOME=`pwd`/.gradle
@@ -100,12 +101,12 @@ spotbugs-sast:
     - fp-prod-onprem
   script:
     - echo $CI_COMMIT_BRANCH
-    - buildah login -u "$FP_CI_REGISTRY_USER" -p "$FP_CI_REGISTRY_PASSWORD" $FP_CI_REGISTRY
+    - podman login -u "$FP_CI_REGISTRY_USER" -p "$FP_CI_REGISTRY_PASSWORD" $FP_CI_REGISTRY
     # - buildah build -t ${REGISTRY_REPOSITORY}:${CI_COMMIT_SHORT_SHA} .
-    - buildah build --format=docker -f Dockerfile -t ${REGISTRY_REPOSITORY}:${CI_COMMIT_SHORT_SHA} .
-    - buildah tag ${REGISTRY_REPOSITORY}:${CI_COMMIT_SHORT_SHA} ${REGISTRY_REPOSITORY}
-    - buildah push --tls-verify=true ${REGISTRY_REPOSITORY}
-    - buildah push --tls-verify=false ${REGISTRY_REPOSITORY}:$CI_COMMIT_SHORT_SHA
+    - podman build  -f Dockerfile -t ${REGISTRY_REPOSITORY}:${CI_COMMIT_SHORT_SHA} .
+    - podman tag ${REGISTRY_REPOSITORY}:${CI_COMMIT_SHORT_SHA} ${REGISTRY_REPOSITORY}
+    - podman push --tls-verify=true ${REGISTRY_REPOSITORY}
+    - podman push --tls-verify=false ${REGISTRY_REPOSITORY}:$CI_COMMIT_SHORT_SHA
 
 
 .deploy_image:
@@ -120,9 +121,9 @@ spotbugs-sast:
     - eval $(ssh-agent -s)
     - ssh-add ~/.ssh/id_rsa
     # - echo $FP_CI_REGISTRY_PASSWORD | ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@docsrv" 'docker login  -u $FP_CI_REGISTRY_USER $FP_CI_REGISTRY --password-stdin'
-    - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@${SERVER}" 'cd /opt/docker/containers/flexpay-funding && docker-compose down --remove-orphans'
+    - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@${SERVER}" 'cd /opt/docker/containers/flexpay-auth && docker-compose down --remove-orphans'
     - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@${SERVER}" "docker rmi ${REGISTRY_REPOSITORY}"
-    - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@${SERVER}" 'cd /opt/docker/containers/flexpay-funding && docker-compose up -d'
+    - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@${SERVER}" 'cd /opt/docker/containers/flexpay-auth && docker-compose up -d'
   
 
 ##############################
