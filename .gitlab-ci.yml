@@ -7,6 +7,8 @@ variables:
   GIT_FETCH_EXTRA_FLAGS: --tags 
   GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.java.home=/opt/openjdk-17"
   APP_VERSION: $CI_PIPELINE_IID
+  APP_PATH: "/opt/docker/containers/"
+  APP_DIR: $APP_PATH/flexpay-funding
   TAG_REGISTRY: registry.flexpay.co.za:5000
   TAG_DEV: $TAG_REGISTRY/flexpay-funding-dev
   TAG_PREPROD: $TAG_REGISTRY/flexpay-funding-preprod
@@ -68,7 +70,7 @@ spotbugs-sast:
       echo $CI_COMMIT_BRANCH
       fi
       
-    - cat ./src/main/resources/application.properties
+    - cat ./src/main/resources/application.properties | grep "flexpay.customer-api.service.url"
     - ./gradlew  build 
     
   cache:
@@ -121,9 +123,9 @@ spotbugs-sast:
     - eval $(ssh-agent -s)
     - ssh-add ~/.ssh/id_rsa
     # - echo $FP_CI_REGISTRY_PASSWORD | ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@docsrv" 'docker login  -u $FP_CI_REGISTRY_USER $FP_CI_REGISTRY --password-stdin'
-    - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@${SERVER}" 'cd /opt/docker/containers/flexpay-auth && docker-compose down --remove-orphans'
+    - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@${SERVER}" 'cd /opt/docker/containers/flexpay-funding && docker-compose down --remove-orphans'
     - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@${SERVER}" "docker rmi ${REGISTRY_REPOSITORY}"
-    - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@${SERVER}" 'cd /opt/docker/containers/flexpay-auth && docker-compose up -d'
+    - ssh -i ~/.ssh/id_rsa -t -oStrictHostKeyChecking=no "dev_deploy@${SERVER}" 'cd /opt/docker/containers/flexpay-funding && docker-compose up -d'
   
 
 ##############################
