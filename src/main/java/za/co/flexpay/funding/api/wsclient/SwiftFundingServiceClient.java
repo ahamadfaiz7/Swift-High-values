@@ -1,16 +1,13 @@
 package za.co.flexpay.funding.api.wsclient;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
-import za.co.flexpay.funding.api.config.RestClientConfiguration;
 import za.co.flexpay.funding.api.model.SwiftFundingResponse;
 import za.co.flexpay.funding.api.model.SwiftInFundingRequest;
 
@@ -25,7 +22,7 @@ public class SwiftFundingServiceClient {
     @Value("${flexpay.customer-api.service.url}")
     private String otpServiceUrl;
     @Value("${flexPay.funding.old.stack.api.username}")
-    private String flexPayFundingUser;
+    private String flexPayFundingUserName;
     @Value("${flexPay.funding.old.stack.api.password}")
     private String flexPayFundingPassword;
 
@@ -41,7 +38,7 @@ public class SwiftFundingServiceClient {
 
         SwiftFundingResponse swiftFundingResponse = null;
         restTemplate = restTemplateBuilder
-                .basicAuthentication(flexPayFundingUser, flexPayFundingPassword)
+                .basicAuthentication(flexPayFundingUserName, flexPayFundingPassword)
                 .build();
         try {
             LOG.info("Making API call to-> "+ otpServiceUrl);
